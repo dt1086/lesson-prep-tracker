@@ -146,6 +146,7 @@ export default function Home() {
         ...prev,
         [eventId]: ((prev[eventId] ?? "") + " " + transcript).trimStart(),
       }));
+      recognition.abort();
     };
     recognition.onend = () => {
       recognitionRef.current = null;
