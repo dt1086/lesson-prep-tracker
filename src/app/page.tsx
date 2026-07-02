@@ -118,9 +118,9 @@ export default function Home() {
   }
 
   function toggleListening(eventId: string) {
-    const SpeechRecognition =
-      (window as unknown as Record<string, unknown>).SpeechRecognition as typeof window.SpeechRecognition |
-      (window as unknown as Record<string, unknown>).webkitSpeechRecognition as typeof window.SpeechRecognition;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const w = window as any;
+    const SpeechRecognition = w.SpeechRecognition ?? w.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Speech recognition is not supported in this browser. Try Safari on iPhone or Chrome on Android.");
       return;
