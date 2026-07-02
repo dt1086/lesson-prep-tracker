@@ -133,7 +133,8 @@ export default function Home() {
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = "en-US";
-    recognition.onresult = (e: SpeechRecognitionEvent) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (e: any) => {
       const transcript = Array.from(e.results)
         .slice(e.resultIndex)
         .map((r) => r[0].transcript)
