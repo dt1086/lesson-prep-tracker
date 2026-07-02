@@ -137,7 +137,7 @@ export default function Home() {
     recognition.onresult = (e: any) => {
       const transcript = Array.from(e.results)
         .slice(e.resultIndex)
-        .map((r) => r[0].transcript)
+        .map((r: any) => (r as any)[0].transcript)
         .join(" ");
       setNoteDraft((prev) => ({
         ...prev,
