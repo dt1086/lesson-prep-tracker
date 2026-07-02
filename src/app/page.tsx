@@ -133,7 +133,7 @@ export default function Home() {
       return;
     }
     const recognition = new SpeechRecognition();
-    recognition.continuous = true;
+    recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -358,14 +358,15 @@ export default function Home() {
                             <div className="flex gap-2">
                               <button
                                 onClick={() => toggleListening(session.id)}
+                                disabled={listening[session.id]}
                                 className={`rounded-md border px-2 py-1 text-xs font-medium ${
                                   listening[session.id]
                                     ? "border-red-400 text-red-400 animate-pulse"
                                     : "border-card-border text-muted hover:text-foreground"
                                 }`}
-                                title={listening[session.id] ? "Stop recording" : "Dictate notes"}
+                                title="Dictate notes"
                               >
-                                {listening[session.id] ? "⏹ Stop" : "🎙 Dictate"}
+                                {listening[session.id] ? "🎙 Listening..." : "🎙 Dictate"}
                               </button>
                               <button
                                 onClick={() => saveNote(session)}
