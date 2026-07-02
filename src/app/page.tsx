@@ -29,6 +29,7 @@ export default function Home() {
   const [savingNote, setSavingNote] = useState<Record<string, boolean>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [newTaskLabel, setNewTaskLabel] = useState<Record<string, string>>({});
+  const [listening, setListening] = useState<Record<string, boolean>>({});
   const [error, setError] = useState<string | null>(null);
 
   async function loadSessions() {
@@ -114,6 +115,42 @@ export default function Home() {
   async function deleteTask(task: PrepTask) {
     await supabase.from("prep_tasks").delete().eq("id", task.id);
     loadSessions();
+  }
+
+  function toggleListening(eventId: string) {
+    const SpeechRecognition =
+      (window as unknown as Record<string, unknown>).SpeechRecognition as typeof window.SpeechRecognition |
+      (window as unknown as Record<string, unknown>).webkitSpeechRecognition as typeof window.SpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Try Safari on iPhone or Chrome on Android.");
+      return;
+    }
+    if (listening[eventId]) {
+      setListening((prev) => ({ ...prev, [eventId]: false }));
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+    recognition.onresult = (e: SpeechRecognitionEvent) => {
+      const transcript = Array.from(e.results)
+        .slice(e.resultIndex)
+        .map((r) => r[0].transcript)
+        .join(" ");
+      setNoteDraft((prev) => ({
+        ...prev,
+        [eventId]: ((prev[eventId] ?? "") + " " + transcript).trimStart(),
+      }));
+    };
+    recognition.onend = () => {
+      setListening((prev) => ({ ...prev, [eventId]: false }));
+    };
+    recognition.onerror = () => {
+      setListening((prev) => ({ ...prev, [eventId]: false }));
+    };
+    recognition.start();
+    setListening((prev) => ({ ...prev, [eventId]: true }));
   }
 
   async function saveNote(session: SessionItem) {
@@ -311,17 +348,30 @@ export default function Home() {
                               placeholder="What did you cover? How did it go?"
                               className="w-full rounded-md border border-card-border bg-background px-2 py-1.5 text-sm focus:outline-none focus:border-accent"
                             />
-                            <button
-                              onClick={() => saveNote(session)}
-                              disabled={savingNote[session.id]}
-                              className="rounded-md border border-card-border px-2 py-1 text-xs text-accent hover:text-accent-dim disabled:opacity-50"
-                            >
-                              {savingNote[session.id]
-                                ? "Saving..."
-                                : ownNote
-                                ? "Update notes"
-                                : "Save notes"}
-                            </button>
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => toggleListening(session.id)}
+                                className={`rounded-md border px-2 py-1 text-xs font-medium ${
+                                  listening[session.id]
+                                    ? "border-red-400 text-red-400 animate-pulse"
+                                    : "border-card-border text-muted hover:text-foreground"
+                                }`}
+                                title={listening[session.id] ? "Stop recording" : "Dictate notes"}
+                              >
+                                {listening[session.id] ? "⏹ Stop" : "🎙 Dictate"}
+                              </button>
+                              <button
+                                onClick={() => saveNote(session)}
+                                disabled={savingNote[session.id]}
+                                className="rounded-md border border-card-border px-2 py-1 text-xs text-accent hover:text-accent-dim disabled:opacity-50"
+                              >
+                                {savingNote[session.id]
+                                  ? "Saving..."
+                                  : ownNote
+                                  ? "Update notes"
+                                  : "Save notes"}
+                              </button>
+                            </div>
                           </div>
                         </>
                       )}
