@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import type { PrepTask } from "@/types/prepTask";
@@ -30,6 +30,7 @@ export default function Home() {
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [newTaskLabel, setNewTaskLabel] = useState<Record<string, string>>({});
   const [listening, setListening] = useState<Record<string, boolean>>({});
+  const recognitionRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function loadSessions() {
@@ -126,6 +127,8 @@ export default function Home() {
       return;
     }
     if (listening[eventId]) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
       setListening((prev) => ({ ...prev, [eventId]: false }));
       return;
     }
@@ -145,12 +148,15 @@ export default function Home() {
       }));
     };
     recognition.onend = () => {
+      recognitionRef.current = null;
       setListening((prev) => ({ ...prev, [eventId]: false }));
     };
     recognition.onerror = () => {
+      recognitionRef.current = null;
       setListening((prev) => ({ ...prev, [eventId]: false }));
     };
     recognition.start();
+    recognitionRef.current = recognition;
     setListening((prev) => ({ ...prev, [eventId]: true }));
   }
 
